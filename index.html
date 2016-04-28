@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css" />
+<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+<script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=true"></script>
+<script src="JS/mainPage.js"></script>
+<script src="JS/conversionMethods.js"></script>
+<script src="JS/weatherObject.js"></script>
+<script src="JS/geolocationServices.js"></script>
+<script src="JS/favouritesPage.js"></script>
+<script src="JS/settingspage.js"></script>
+
+<style>
+    .module {
+
+        margin: 10px;
+        width: 280px;
+        height: 150px;
+        float: left;
+        background-image: url(media/w31.jpe);
+        background-size: cover;
+        position: relative;
+    }
+    h2 {
+        position: absolute;
+        bottom: 10px;
+        left: 10px;
+        background: rgba(0, 0, 0, 0.75);
+        padding: 4px 8px;
+        color: white;
+        margin: 0;
+        font: 14px Sans-Serif;
+    }
+    #dateTextDiv {
+        margin:0 auto;
+        margin-left:auto;
+        margin-right:auto;
+        align:center;
+        text-align:center;
+    }
+    #dayOrNightDiv {
+        margin:0 auto;
+        margin-left:auto;
+        margin-right:auto;
+        align:center;
+        text-align:center;
+    }
+
+    #dayButton, #nightButton {
+        width: 40px;
+        height: 40px;
+        padding-right: 70px;
+        padding-left: 30px;
+
+    }
+
+    .opp h2 {
+        background: rgba(255, 255, 255, 0.75);
+        color: black;
+    }
+    #loadingIconDiv {
+        margin:0 auto;
+        margin-left:auto;
+        margin-right:auto;
+        align:center;
+        text-align:center;
+    }
+    #loadingIcon {
+        height: 40px;
+        width: 40px;
+    }
+
+    .ui-dialog-contain {
+        width: 92.5%;
+        max-width: 500px;
+        margin: 10% auto 15px auto;
+        padding: 0;
+        position: relative;
+        top: -15px;
+    }
+    #dialogButtons, #dialogButton {
+        margin:0 auto;
+        margin-left:auto;
+        margin-right:auto;
+        align:center;
+        text-align:center;
+    }
+    #weatherUpdateText {
+        text-align:center;
+    }
+
+</style>
+
+
+<!--
+The following websites were used for the creation of this document.
+
+This link was helpful in understanding how to layer multiple images and text.
+https://css-tricks.com/design-considerations-text-images/
+
+This link was used for the checkboxes on the settings page.
+http://demos.jquerymobile.com/1.4.3/checkboxradio-checkbox/
+
+This link was used for creating the flip switches on the favourites tab and settings page.
+https://api.jquerymobile.com/flipswitch/
+
+This link was used for creating the popup notification on the settings page.
+https://demos.jquerymobile.com/1.2.0/docs/pages/popup/index.html
+
+This link was used for creating the dialog on the weather page that displays the first
+time the user uses the program.
+https://demos.jquerymobile.com/1.2.0/docs/pages/dialog/index.html
+-->
+
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+<div data-role="page" id="weatherPage">
+
+    <div data-role="header">
+        <h1>Weather App</h1>
+        <a href="#favouritesPanel" data-icon="bars" data-iconpos="notext"></a>
+        <a href="" data-icon="refresh" data-iconpos="notext" id="refreshButton"></a>
+    </div>
+
+    <div data-role="content" id="weatherStuff" >
+        <div id="dateTextDiv">
+        <b id="dateText">Date unavailable</b></div>
+        <div class="module opp" id="weatherDisplay">
+        </div>
+        <div id="dayOrNightDiv">
+            <img src="media/sunicon.png" id="dayButton">
+            <img src="media/moonicon.png" id="nightButton">
+        </div>
+        <div id="weatherTextOne">No Data</div>
+        <div id="weatherTextTwo">No Data</div>
+        <div id="weatherTextThree"></div>
+        <div id="weatherTextFour"></div>
+        <div id="weatherTextFive"></div>
+        <div id="weatherTextUV"></div>
+        <div id="weatherTextOutOfDate"></div>
+        <br>
+        <ul data-role="listview" data-inset="true" id="forecastList">
+            <li><a href="#">Friday Forecast</a></li>
+            <li><a href="#">Saturday Forecast</a></li>
+            <li><a href="#">Sunday Forecast</a>
+            <li><a href="#">Monday Forecast</a></li>
+        </ul>
+        <br>
+    </div>
+
+    <div data-role="footer" data-position="fixed">
+        <div data-role="navbar"><ul>
+            <li><a href="#locationPage" data-icon="location" data-iconppos="notext"></a></li>
+            <li><a href="#settingsPage" data-icon="gear" data-iconppos="notext"></a></li>
+        </ul></div>
+    </div>
+
+    <div data-role="panel" id="favouritesPanel">
+        <h1>Select Favourite Location</h1>
+        <ul data-role="listview" id="favouritesList">
+            <li><a href="#">Apollo House</a></li>
+            <li><a href="#">Balamory</a></li>
+            <li><a href="#">Trump Tower</a></li>
+        </ul>
+        <h4 id="favouritesErrorText"></h4>
+        <h4 id ="currentLocation">Current Location: Paisley</h4>
+        <h3>Add current location to favourites.</h3>
+        <p>Why not change the name to something custom, like "Home" or "Work"?</p>
+        <input id="favouriteName" type="text">
+        <button id="addFavourite">Add it!</button>
+        <br>
+        <label for="flip-1">Enable Delete Mode - Swiping right on an item will delete it.</label>
+        <select name="flip-1" id="flip-2" data-role="slider">
+            <option value="off">Off</option>
+            <option value="on">On</option>
+        </select>
+
+    </div>
+
+    <a href="#weatherPagePopup" data-rel="popup" data-position-to="window">
+
+        <div data-role="popup" id="weatherPagePopup">
+            <a href="#" data-rel="back" data-role="button" data-theme="a" data-icon="delete" data-iconpos="notext" class="ui-btn-left">Close</a>
+            <div data-role="header" data-theme="a" class="ui-corner-top">
+                <h1>Refreshing...</h1>
+            </div>
+            <p><div id =weatherUpdateText>Sorry, there appears to be an error with your internet connection. Please try again when you have a stable connection.</div></p>
+            <div id="dialogButton">
+                <a href="#" data-role="button" data-inline="true" data-rel="back" data-transition="flow">Right, ta.</a>
+            </div>
+        </div>
+
+</div>
+
+<div id="weatherPageDialog" data-role="dialog">
+    <div data-role="header">
+        <h1>Welcome!</h1>
+
+    </div>
+    <div data-role="content">
+        Hello, welcome to the Weather Application.<br><br>
+        Your initial location has been set to London. If you would like to change it to somewhere closer to you, just press change location below.<br><br>
+        <div id ="dialogButtons"><a href="#weatherPage" data-role="button">Alright, cheers.</a>
+            <a href="#locationPage" data-role="button">Change location.</a></div>
+    </div>
+    <div data-role="footer" data-position="fixed" class="ui-bar">
+        <nav>
+        </nav>
+    </div>
+</div>
+<div data-role="page" id="locationPage">
+
+    <div data-role="header">
+        <h1>Location</h1>
+        <a href="#weatherPage" data-icon="home" data-iconpos="notext"></a>
+    </div>
+
+    <div data-role="content">
+        <h3>Change your location</h3>
+        Somewhere new? On the move? Simply click the button here to change your current location using your
+        devices GPS.<br><br>
+        Please ensure you are connected to the internet and that your devices location services are enabled. You may need to reload the application after
+        enabling location services.<br>
+        <div id="loadingIconDiv"><img src="media/loadingIcon.gif" id="loadingIcon"></div>
+        <p id="gpsErrorText"></p>
+        <button data-icon="location" id="geoLocationButton">Change via GPS</button>
+        If you have no GPS, or want to pick a different location, please enter the name here. This search is case sensitive.
+        <input value="London" id="nameSearchValue">
+        <button id="geoSearchButton">Search</button>
+        <p id="resultsText"></p>
+    </div>
+
+    <div data-role="footer" data-position="fixed">
+        <div data-role="navbar"><ul>
+            <li><a href="#settingsPage" data-icon="gear" data-iconppos="notext"></a></li>
+        </ul></div>
+    </div>
+</div>
+
+<div data-role="page" id="settingsPage">
+
+    <div data-role="header">
+        <h1>Settings</h1>
+        <a href="#weatherPage" data-icon="home" data-iconpos="notext"></a>
+        <a href="#settingsPagePopup" data-icon="info" data-iconpos="notext" data-rel="popup"></a>
+    </div>
+
+    <div data-role="content">
+        <h3>Change your settings</h3>
+        <label for="updateFlip">Update Weather on opening application</label>
+        <select name="updateFlip" id="updateFlip" data-role="slider">
+            <option value="off">Off</option>
+            <option value="on">On</option>
+        </select>
+        <form>
+            <fieldset data-role="controlgroup" data-iconpos="right">
+                <legend>More Options</legend>
+                <input type="checkbox" name="checkbox-h-6a" id="fahrenheitCheck">
+                <label for="fahrenheitCheck">Switch to fahrenheit</label>
+                <input type="checkbox" name="checkbox-h-6b" id="refreshCheck">
+                <label for="refreshCheck">Show refresh button</label>
+                <input type="checkbox" name="checkbox-h-6c" id="dateCheck" checked="off">
+                <label for="dateCheck">Show Date</label>
+                <input type="checkbox" name="checkbox-h-6c" id="extraCheck" checked="no">
+                <label for="extraCheck">Show Extra Weather Details</label>
+            </fieldset>
+        </form>
+
+    </div>
+
+    <div data-role="footer" data-position="fixed">
+        <div data-role="navbar"><ul>
+            <li><a href="#locationPage" data-icon="location" data-iconppos="notext"></a></li>
+        </ul></div>
+    </div>
+
+    <a href="#settingsPagePopup" data-rel="popup" data-position-to="window">
+
+        <div data-role="popup" id="settingsPagePopup">
+            <a href="#" data-rel="back" data-role="button" data-theme="a" data-icon="delete" data-iconpos="notext" class="ui-btn-left">Close</a>
+            <br>
+            <p>Welcome to the help page! Here you will find various options for customising the application.</p>
+            <p><b>Update Weather on opening application.</b> When selected, if you have access to the internet, your weather forecast will be
+            updated upon opening the application.</p>
+            <p><b>Switch to fahrenheit</b> When selected, will display temperature in fahrenheit</p>
+            <p><b>Show refresh button</b> When selected, will display a refresh button in the top right corner of the weather page. Pressing this will
+            refresh your forecast. This requires an internet connection.</p>
+            <p><b>Show date</b> When selected, display the date along with other forecast information.</p>
+            <p><b>Show extra weather details</b> When selected, displays extra information. This extra information is Wind Direction, Wind Gust Speed,
+            Precipitation Probability and UV Exposure.</p>
+            <p><b>Note:</b> The Met Office data updates roughly once an hour. Pressing refresh more often than this will accomplish nothing.</p>
+        </div>
+</div>
+
+
+</body>
+</html>
